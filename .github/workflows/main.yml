@@ -1,0 +1,30 @@
+# .github/workflows/test-famic-access.yml
+name: Test FAMIC Access
+
+on:
+  workflow_dispatch:  # 手動実行ボタン
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test FAMIC CSV Download
+        run: |
+          echo "=== Testing FAMIC access ==="
+          
+          # 基本部をダウンロード試行
+          HTTP_CODE=$(curl -sL -o /tmp/test.zip -w "%{http_code}" \
+            "https://www.acis.famic.go.jp/ddata/csvdata/%E7%99%BB%E9%8C%B2%E5%9F%BA%E6%9C%AC%E9%83%A8.zip")
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "File size: $(wc -c < /tmp/test.zip) bytes"
+          
+          # ZIPとして有効か確認
+          if file /tmp/test.zip | grep -q "Zip archive"; then
+            echo "✅ SUCCESS: Valid ZIP file downloaded"
+            unzip -l /tmp/test.zip | head -10
+          else
+            echo "❌ FAILED: Not a valid ZIP file"
+            echo "Response content (first 200 bytes):"
+            head -c 200 /tmp/test.zip
+          fi 
